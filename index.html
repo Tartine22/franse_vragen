@@ -15,7 +15,7 @@ button { padding:0.5rem 1rem; margin:0.3rem; border-radius:6px; border:none; cur
 <body>
 <main>
 <h1>Stap 1: Observeer de structuur</h1>
-<p>Typ een Franse zin en klik op Uitvoeren. Klik bij elke vraag op “Toon structuur”   ... om de onderdelen te bekijken.</p>
+<p>Typ een Franse zin en klik op Uitvoeren. Klik bij elke vraag op “Toon structuur” om de onderdelen te bekijken.</p>
 
 <input type="text" id="zin" placeholder="Typ hier een Franse zin...">
 <button onclick="maakVragen()">Uitvoeren</button>
@@ -23,45 +23,63 @@ button { padding:0.5rem 1rem; margin:0.3rem; border-radius:6px; border:none; cur
 
 <script>
 function analyseZin(zin){
-    const woorden=zin.trim().split(/\s+/);
-    if(woorden.length<2) return [null,null];
+    const woorden = zin.trim().split(/\s+/);
+    if(woorden.length < 2) return [null, null];
     let onderwerp, rest;
-    if(woorden[0].includes("-")||["le","la","les"].includes(woorden[0].toLowerCase())){
-        onderwerp=woorden.slice(0,2).join(" ");
-        rest=woorden.slice(2).join(" ");
-    }else{
-        onderwerp=woorden[0];
-        rest=woorden.slice(1).join(" ");
+    if(woorden[0].includes("-") || ["le","la","les"].includes(woorden[0].toLowerCase())){
+        onderwerp = woorden.slice(0,2).join(" ");
+        rest = woorden.slice(2).join(" ");
+    } else {
+        onderwerp = woorden[0];
+        rest = woorden.slice(1).join(" ");
     }
-    return [onderwerp,rest];
+    return [onderwerp, rest];
 }
 
 function toggleStructuur(id){
-    const el=document.getElementById(id);
-    el.style.display=el.style.display==='none'?'block':'none';
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 function maakVragen(){
-    let zin=document.getElementById("zin").value.trim();
+    let zin = document.getElementById("zin").value.trim();
     if(!zin) return;
-    if(zin.endsWith(".")) zin=zin.slice(0,-1);
+    if(zin.endsWith(".")) zin = zin.slice(0,-1);
 
     const [onderwerp, rest] = analyseZin(zin);
-    if(!onderwerp){ document.getElementById("output").innerHTML="<p>De zin is te kort.</p>"; return; }
+    if(!onderwerp){
+        document.getElementById("output").innerHTML = "<p>De zin is te kort.</p>";
+        return;
+    }
 
     localStorage.setItem("onderwerp", onderwerp);
     localStorage.setItem("rest", rest);
     localStorage.setItem("zin", zin);
 
-    const output=document.getElementById("output");
-    output.innerHTML="<h2>Open vragen</h2>";
+    const output = document.getElementById("output");
+    output.innerHTML = "<h2>Open vragen</h2>";
 
-    const vraagwoorden=["Pourquoi","Où","Comment","Quand","Qui"];
+    // helper: eerste letter van onderwerp klein maken, ook bij koppelteken
+    function lowercaseEersteLetterKoppel(str){
+        if(!str) return "";
+        return str.split("-").map((deel, index) => {
+            if(index === 0){
+                return deel.charAt(0).toLowerCase() + deel.slice(1);
+            } else {
+                return deel;
+            }
+        }).join("-");
+    }
+
+    const onderwerpKlein = lowercaseEersteLetterKoppel(onderwerp);
+    const gewoneZin = `${onderwerpKlein} ${rest}`;
+
+    const vraagwoorden = ["Pourquoi","Où","Comment","Quand","Qui"];
     vraagwoorden.forEach((vw,i)=>{
-        const structId="struct"+i;
-        output.innerHTML+=`
+        const structId = "struct" + i;
+        output.innerHTML += `
             <div>
-                <p>${vw} est-ce que ${onderwerp} ${rest} ? 
+                <p>${vw} est-ce que ${gewoneZin} ? 
                 <button class="show-structuur" onclick="toggleStructuur('${structId}')">Toon structuur</button></p>
                 <div class="structuur" id="${structId}">
                     <strong>Vraagwoord:</strong> ${vw} <br>
@@ -72,14 +90,13 @@ function maakVragen(){
         `;
     });
 
-    output.innerHTML+=`<br><button onclick="gaNaarStap2()">Ga naar Stap 2</button>`;
+    output.innerHTML += `<br><button onclick="gaNaarStap2()">Ga naar Stap 2</button>`;
 }
 
 function gaNaarStap2(){
-    window.location.href="stap2.html";
+    window.location.href = "stap2.html";
 }
 </script>
 </main>
 </body>
 </html>
-
