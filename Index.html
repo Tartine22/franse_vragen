@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Franse Vragengenerator - Stap 1</title>
+<style>
+body { font-family: "Segoe UI", sans-serif; background: #f5f5f5; margin:0; padding:0; }
+main { max-width:800px; margin:2rem auto; background:white; padding:2rem; border-radius:12px; }
+button { padding:0.5rem 1rem; margin:0.3rem; border-radius:6px; border:none; cursor:pointer; }
+.show-structuur { background:#2196F3; color:white; }
+.structuur { background:#e0e0e0; padding:0.6rem; border-radius:6px; display:none; margin-top:0.5rem;}
+</style>
+</head>
+<body>
+<main>
+<h1>Stap 1: Observeer de structuur</h1>
+<p>Typ een Franse zin en klik op Uitvoeren. Klik bij elke vraag op “Toon structuur” om de onderdelen te bekijken.</p>
+
+<input type="text" id="zin" placeholder="Typ hier een Franse zin...">
+<button onclick="maakVragen()">Uitvoeren</button>
+<div id="output"></div>
+
+<script>
+function analyseZin(zin){
+    const woorden=zin.trim().split(/\s+/);
+    if(woorden.length<2) return [null,null];
+    let onderwerp, rest;
+    if(woorden[0].includes("-")||["le","la","les"].includes(woorden[0].toLowerCase())){
+        onderwerp=woorden.slice(0,2).join(" ");
+        rest=woorden.slice(2).join(" ");
+    }else{
+        onderwerp=woorden[0];
+        rest=woorden.slice(1).join(" ");
+    }
+    return [onderwerp,rest];
+}
+
+function toggleStructuur(id){
+    const el=document.getElementById(id);
+    el.style.display=el.style.display==='none'?'block':'none';
+}
+
+function maakVragen(){
+    let zin=document.getElementById("zin").value.trim();
+    if(!zin) return;
+    if(zin.endsWith(".")) zin=zin.slice(0,-1);
+
+    const [onderwerp, rest] = analyseZin(zin);
+    if(!onderwerp){ document.getElementById("output").innerHTML="<p>De zin is te kort.</p>"; return; }
+
+    localStorage.setItem("onderwerp", onderwerp);
+    localStorage.setItem("rest", rest);
+    localStorage.setItem("zin", zin);
+
+    const output=document.getElementById("output");
+    output.innerHTML="<h2>Open vragen</h2>";
+
+    const vraagwoorden=["Pourquoi","Où","Comment","Quand","Qui"];
+    vraagwoorden.forEach((vw,i)=>{
+        const structId="struct"+i;
+        output.innerHTML+=`
+            <div>
+                <p>${vw} est-ce que ${onderwerp} ${rest} ? 
+                <button class="show-structuur" onclick="toggleStructuur('${structId}')">Toon structuur</button></p>
+                <div class="structuur" id="${structId}">
+                    <strong>Vraagwoord:</strong> ${vw} <br>
+                    <strong>Est-ce que:</strong> est-ce que <br>
+                    <strong>Gewone zin:</strong> ${onderwerp} ${rest}
+                </div>
+            </div>
+        `;
+    });
+
+    output.innerHTML+=`<br><button onclick="gaNaarStap2()">Ga naar Stap 2</button>`;
+}
+
+function gaNaarStap2(){
+    window.location.href="stap2.html";
+}
+</script>
+</main>
+</body>
+</html>
