@@ -21,9 +21,24 @@ button { padding:0.5rem 1rem; margin:0.3rem; border-radius:6px; border:none; cur
 <div id="output"></div>
 
 <script>
-const onderwerp=localStorage.getItem("onderwerp");
-const rest=localStorage.getItem("rest");
-const zin=localStorage.getItem("zin");
+const onderwerp = localStorage.getItem("onderwerp");
+const rest = localStorage.getItem("rest");
+const zin = localStorage.getItem("zin");
+
+// helper: eerste letter van onderwerp klein maken, ook bij koppelteken
+function lowercaseEersteLetterKoppel(str){
+    if(!str) return "";
+    return str.split("-").map((deel, index) => {
+        if(index === 0){
+            return deel.charAt(0).toLowerCase() + deel.slice(1);
+        } else {
+            return deel;
+        }
+    }).join("-");
+}
+
+// maak onderwerp met kleine letter
+const onderwerpKlein = lowercaseEersteLetterKoppel(onderwerp);
 
 if(!onderwerp || !rest){
     document.getElementById("output").innerHTML="<p>Geen zin gevonden. Ga eerst naar Stap 1.</p>";
@@ -34,7 +49,7 @@ if(!onderwerp || !rest){
         const fbId="fb"+i;
         output.innerHTML+=`
             <div>
-                <p>${vw} est-ce que ${onderwerp} ${rest} ?</p>
+                <p>${vw} est-ce que ${onderwerpKlein} ${rest} ?</p>
                 <button class="niet-betekenisvol" onclick="document.getElementById('${fbId}').innerHTML='❌ Deze zin betekent niets'">Deze zin betekent niets</button>
                 <button class="betekenisvol" onclick="document.getElementById('${fbId}').innerHTML='✅ Deze zin is logisch en heeft betekenis'">Deze zin is logisch en heeft betekenis</button>
                 <div id="${fbId}" class="feedback"></div>
