@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Franse Vragengenerator - Stap 2</title>
+<style>
+body { font-family: "Segoe UI", sans-serif; background: #f5f5f5; margin:0; padding:0; }
+main { max-width:800px; margin:2rem auto; background:white; padding:2rem; border-radius:12px; }
+button { padding:0.5rem 1rem; margin:0.3rem; border-radius:6px; border:none; cursor:pointer; }
+.betekenisvol { background:#4CAF50; color:white; }
+.niet-betekenisvol { background:#e53935; color:white; }
+.feedback { font-weight:bold; margin-top:0.5rem;}
+</style>
+</head>
+<body>
+<main>
+<h1>Stap 2: Beoordeel de zinnen</h1>
+<p>Gebruik de knoppen om aan te geven of de zin betekenisvol is of niet.</p>
+
+<div id="output"></div>
+
+<script>
+const onderwerp=localStorage.getItem("onderwerp");
+const rest=localStorage.getItem("rest");
+const zin=localStorage.getItem("zin");
+
+if(!onderwerp || !rest){
+    document.getElementById("output").innerHTML="<p>Geen zin gevonden. Ga eerst naar Stap 1.</p>";
+}else{
+    const vraagwoorden=["Pourquoi","Où","Comment","Quand","Qui"];
+    const output=document.getElementById("output");
+    vraagwoorden.forEach((vw,i)=>{
+        const fbId="fb"+i;
+        output.innerHTML+=`
+            <div>
+                <p>${vw} est-ce que ${onderwerp} ${rest} ?</p>
+                <button class="niet-betekenisvol" onclick="document.getElementById('${fbId}').innerHTML='❌ Deze zin betekent niets'">Deze zin betekent niets</button>
+                <button class="betekenisvol" onclick="document.getElementById('${fbId}').innerHTML='✅ Deze zin is logisch en heeft betekenis'">Deze zin is logisch en heeft betekenis</button>
+                <div id="${fbId}" class="feedback"></div>
+            </div>
+            <hr>
+        `;
+    });
+}
+</script>
+</main>
+</body>
+</html>
