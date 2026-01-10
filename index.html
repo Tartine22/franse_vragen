@@ -5,20 +5,93 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Franse Vragengenerator - Stap 1</title>
 <style>
-body { font-family: "Segoe UI", sans-serif; background: #f5f5f5; margin:0; padding:0; }
-main { max-width:800px; margin:2rem auto; background:white; padding:2rem; border-radius:12px; }
-button { padding:0.5rem 1rem; margin:0.3rem; border-radius:6px; border:none; cursor:pointer; }
-.show-structuur { background:#2196F3; color:white; }
-.structuur { background:#e0e0e0; padding:0.6rem; border-radius:6px; display:none; margin-top:0.5rem;}
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f0f4f8;
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+}
+
+button {
+    padding: 0.6rem 1.2rem;
+    margin: 0.3rem 0;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+button.show-structuur {
+    background: #2196F3;
+    color: white;
+}
+
+button.show-structuur:hover {
+    background: #1976D2;
+}
+
+.structuur {
+    background: #f0f0f0;
+    padding: 0.8rem;
+    border-radius: 8px;
+    display: none;
+    margin-top: 0.5rem;
+    font-family: monospace;
+}
+
+hr {
+    margin: 1.5rem 0;
+    border: none;
+    border-top: 1px solid #ddd;
+}
+
+button#uitvoeren {
+    background: #4CAF50;
+    color: white;
+}
+
+button#uitvoeren:hover {
+    background: #388E3C;
+}
+
+p {
+    font-size: 1rem;
+    color: #333;
+}
 </style>
 </head>
 <body>
 <main>
 <h1>Stap 1: Observeer de structuur</h1>
-<p>Typ een Franse zin en klik op Uitvoeren. Klik bij elke vraag op “Toon structuur” om de onderdelen te bekijken.</p>
+<p>Typ een gewone Franse zin. Eerst zie je de gesloten vraag, daarna alle open vragen. Klik op “Toon structuur” om de onderdelen te bekijken.</p>
 
 <input type="text" id="zin" placeholder="Typ hier een Franse zin...">
-<button onclick="maakVragen()">Uitvoeren</button>
+<button id="uitvoeren" onclick="maakVragen()">Uitvoeren</button>
+
 <div id="output"></div>
 
 <script>
@@ -26,7 +99,7 @@ function analyseZin(zin){
     const woorden = zin.trim().split(/\s+/);
     if(woorden.length < 2) return [null, null];
     let onderwerp, rest;
-    if(woorden[0].includes("-") || ["le","la","les"].includes(woorden[0].toLowerCase())){
+    if(["le","la","les","un","une"].includes(woorden[0].toLowerCase())){
         onderwerp = woorden.slice(0,2).join(" ");
         rest = woorden.slice(2).join(" ");
     } else {
@@ -38,7 +111,29 @@ function analyseZin(zin){
 
 function toggleStructuur(id){
     const el = document.getElementById(id);
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function lowercaseEersteLetterKoppel(str){
+    if(!str) return "";
+    return str.split("-").map((deel,index)=>{
+        if(index===0) return deel.charAt(0).toLowerCase() + deel.slice(1);
+        else return deel;
+    }).join("-");
+}
+
+function estCeQueGesloten(zin){
+    if(!zin) return "Est-ce que";
+    const eersteLetter = zin.trim().charAt(0).toLowerCase();
+    if("aeiouh".includes(eersteLetter)) return "Est-ce qu'";
+    return "Est-ce que";
+}
+
+function estCeQueOpen(zin){
+    if(!zin) return "est-ce que";
+    const eersteLetter = zin.trim().charAt(0).toLowerCase();
+    if("aeiouh".includes(eersteLetter)) return "est-ce qu'";
+    return "est-ce que";
 }
 
 function maakVragen(){
@@ -56,41 +151,51 @@ function maakVragen(){
     localStorage.setItem("rest", rest);
     localStorage.setItem("zin", zin);
 
-    const output = document.getElementById("output");
-    output.innerHTML = "<h2>Open vragen</h2>";
-
-    // helper: eerste letter van onderwerp klein maken, ook bij koppelteken
-    function lowercaseEersteLetterKoppel(str){
-        if(!str) return "";
-        return str.split("-").map((deel, index) => {
-            if(index === 0){
-                return deel.charAt(0).toLowerCase() + deel.slice(1);
-            } else {
-                return deel;
-            }
-        }).join("-");
-    }
-
     const onderwerpKlein = lowercaseEersteLetterKoppel(onderwerp);
     const gewoneZin = `${onderwerpKlein} ${rest}`;
+    const gesloten = estCeQueGesloten(gewoneZin);
+    const open = estCeQueOpen(gewoneZin);
 
+    const output = document.getElementById("output");
+    output.innerHTML = "<h2>Vragen met structuur</h2>";
+
+    let vraagCount = 0;
+
+    // Gesloten vraag
+    const geslotenId = "struct"+vraagCount++;
+    output.innerHTML += `
+        <div>
+            <p><strong>Gesloten vraag:</strong><br>
+            ${gesloten}${gesloten.endsWith("'") ? '' : ' '}${gewoneZin} ?</p>
+            <button class="show-structuur" onclick="toggleStructuur('${geslotenId}')">Toon structuur</button>
+            <div class="structuur" id="${geslotenId}">
+                Est-ce que = ${gesloten}<br>
+                Gewone zin = ${gewoneZin}
+            </div>
+        </div>
+        <hr>
+    `;
+
+    // Open vragen
     const vraagwoorden = ["Pourquoi","Où","Comment","Quand","Qui"];
-    vraagwoorden.forEach((vw,i)=>{
-        const structId = "struct" + i;
+    vraagwoorden.forEach(vw=>{
+        const structId = "struct"+vraagCount++;
         output.innerHTML += `
             <div>
-                <p>${vw} est-ce que ${gewoneZin} ? 
-                <button class="show-structuur" onclick="toggleStructuur('${structId}')">Toon structuur</button></p>
+                <p><strong>Open vraag:</strong><br>
+                ${vw} ${open}${open.endsWith("'") ? '' : ' '}${gewoneZin} ?</p>
+                <button class="show-structuur" onclick="toggleStructuur('${structId}')">Toon structuur</button>
                 <div class="structuur" id="${structId}">
-                    <strong>Vraagwoord:</strong> ${vw} <br>
-                    <strong>Est-ce que:</strong> est-ce que <br>
-                    <strong>Gewone zin:</strong> ${onderwerp} ${rest}
+                    Vraagwoord = ${vw}<br>
+                    est-ce que = ${open}<br>
+                    Gewone zin = ${gewoneZin}
                 </div>
             </div>
+            <hr>
         `;
     });
 
-    output.innerHTML += `<br><button onclick="gaNaarStap2()">Ga naar Stap 2</button>`;
+    output.innerHTML += `<br><button id="uitvoeren" onclick="gaNaarStap2()">Ga naar Stap 2</button>`;
 }
 
 function gaNaarStap2(){
