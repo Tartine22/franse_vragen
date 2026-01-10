@@ -5,54 +5,157 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Franse Vragengenerator - Stap 2</title>
 <style>
-body { font-family: "Segoe UI", sans-serif; background: #f5f5f5; margin:0; padding:0; }
-main { max-width:800px; margin:2rem auto; background:white; padding:2rem; border-radius:12px; }
-button { padding:0.5rem 1rem; margin:0.3rem; border-radius:6px; border:none; cursor:pointer; }
-.betekenisvol { background:#4CAF50; color:white; }
-.niet-betekenisvol { background:#e53935; color:white; }
-.feedback { font-weight:bold; margin-top:0.5rem;}
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f0f4f8;
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+button {
+    padding: 0.6rem 1.2rem;
+    margin: 0.3rem 0;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+button.niet-betekenisvol {
+    background: #E53935;
+    color: white;
+}
+
+button.niet-betekenisvol:hover {
+    background: #C62828;
+}
+
+button.betekenisvol {
+    background: #4CAF50;
+    color: white;
+}
+
+button.betekenisvol:hover {
+    background: #388E3C;
+}
+
+.feedback {
+    font-weight: bold;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+}
+
+hr {
+    margin: 1.5rem 0;
+    border: none;
+    border-top: 1px solid #ddd;
+}
+
+p {
+    font-size: 1rem;
+    color: #333;
+}
 </style>
 </head>
 <body>
 <main>
-<h1>Stap 2: Beoordeel de zinnen</h1>
-<p>Gebruik de knoppen om aan te geven of de zin betekenisvol is of niet.</p>
+<h1>Stap 2: Beoordeel de vragen</h1>
+<p>Bekijk eerst de gesloten vraag, daarna alle open vragen. Gebruik de twee knopjes na elke vraag om feedback te geven.</p>
 
 <div id="output"></div>
 
 <script>
 const onderwerp = localStorage.getItem("onderwerp");
 const rest = localStorage.getItem("rest");
-const zin = localStorage.getItem("zin");
 
-// helper: eerste letter van onderwerp klein maken, ook bij koppelteken
 function lowercaseEersteLetterKoppel(str){
     if(!str) return "";
-    return str.split("-").map((deel, index) => {
-        if(index === 0){
-            return deel.charAt(0).toLowerCase() + deel.slice(1);
-        } else {
-            return deel;
-        }
+    return str.split("-").map((deel,index)=>{
+        if(index===0) return deel.charAt(0).toLowerCase() + deel.slice(1);
+        else return deel;
     }).join("-");
 }
 
-// maak onderwerp met kleine letter
-const onderwerpKlein = lowercaseEersteLetterKoppel(onderwerp);
+function estCeQueGesloten(zin){
+    if(!zin) return "Est-ce que";
+    const eersteLetter = zin.trim().charAt(0).toLowerCase();
+    if("aeiouh".includes(eersteLetter)) return "Est-ce qu'";
+    return "Est-ce que";
+}
+
+function estCeQueOpen(zin){
+    if(!zin) return "est-ce que";
+    const eersteLetter = zin.trim().charAt(0).toLowerCase();
+    if("aeiouh".includes(eersteLetter)) return "est-ce qu'";
+    return "est-ce que";
+}
 
 if(!onderwerp || !rest){
-    document.getElementById("output").innerHTML="<p>Geen zin gevonden. Ga eerst naar Stap 1.</p>";
-}else{
-    const vraagwoorden=["Pourquoi","Où","Comment","Quand","Qui"];
-    const output=document.getElementById("output");
-    vraagwoorden.forEach((vw,i)=>{
-        const fbId="fb"+i;
-        output.innerHTML+=`
+    document.getElementById("output").innerHTML = "<p>Geen zin gevonden. Ga eerst naar Stap 1.</p>";
+} else {
+    const onderwerpKlein = lowercaseEersteLetterKoppel(onderwerp);
+    const gewoneZin = `${onderwerpKlein} ${rest}`;
+    const gesloten = estCeQueGesloten(gewoneZin);
+    const open = estCeQueOpen(gewoneZin);
+
+    const output = document.getElementById("output");
+    output.innerHTML = "<h2>Vragen beoordelen</h2>";
+
+    let vraagCount = 0;
+
+    // Gesloten vraag
+    const geslotenId = "fb"+vraagCount++;
+    output.innerHTML += `
+        <div>
+            <p><strong>Gesloten vraag:</strong><br>
+            ${gesloten}${gesloten.endsWith("'") ? '' : ' '}${gewoneZin} ?</p>
+
+            <button class="niet-betekenisvol"
+                onclick="document.getElementById('${geslotenId}').innerHTML='❌ Deze vraag betekent niets'">
+                Deze vraag betekent niets
+            </button>
+            <button class="betekenisvol"
+                onclick="document.getElementById('${geslotenId}').innerHTML='✅ Deze vraag is logisch en heeft betekenis'">
+                Deze vraag is logisch en heeft betekenis
+            </button>
+            <div id="${geslotenId}" class="feedback"></div>
+        </div>
+        <hr>
+    `;
+
+    // Open vragen
+    const vraagwoorden = ["Pourquoi","Où","Comment","Quand","Qui"];
+    vraagwoorden.forEach(vw=>{
+        const openId = "fb"+vraagCount++;
+        output.innerHTML += `
             <div>
-                <p>${vw} est-ce que ${onderwerpKlein} ${rest} ?</p>
-                <button class="niet-betekenisvol" onclick="document.getElementById('${fbId}').innerHTML='❌ Deze zin betekent niets'">Deze zin betekent niets</button>
-                <button class="betekenisvol" onclick="document.getElementById('${fbId}').innerHTML='✅ Deze zin is logisch en heeft betekenis'">Deze zin is logisch en heeft betekenis</button>
-                <div id="${fbId}" class="feedback"></div>
+                <p><strong>Open vraag:</strong><br>
+                ${vw} ${open}${open.endsWith("'") ? '' : ' '}${gewoneZin} ?</p>
+
+                <button class="niet-betekenisvol"
+                    onclick="document.getElementById('${openId}').innerHTML='❌ Deze vraag betekent niets'">
+                    Deze vraag betekent niets
+                </button>
+                <button class="betekenisvol"
+                    onclick="document.getElementById('${openId}').innerHTML='✅ Deze vraag is logisch en heeft betekenis'">
+                    Deze vraag is logisch en heeft betekenis
+                </button>
+                <div id="${openId}" class="feedback"></div>
             </div>
             <hr>
         `;
